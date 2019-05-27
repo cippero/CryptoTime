@@ -29,6 +29,7 @@ app.get('/', (req, res) => {
     console.log('API call response:', response);
     let data = [];
     response.data.forEach(e => data.push({[e.symbol]: e.name}));
+    // cache the data array on frontend or redis?, only fetch if it doesn't already exist
     res.json(data);
   }).catch((err) => {
     console.log('API call error:', err.message);
