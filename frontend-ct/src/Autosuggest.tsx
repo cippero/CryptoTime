@@ -1,6 +1,25 @@
+import * as React from 'react';
 import Autosuggest from 'react-autosuggest';
 
-const mockData: object[] = [
+interface IProps { };
+
+interface IState {
+  value: string,
+  suggestions: Array<ICrypto>
+};
+
+interface ICrypto {
+  symbol: string,
+  name: string,
+};
+
+interface IInputProps {
+  placeholder: string,
+  value: string,
+  onChange: Function
+};
+
+const mockData: Array<ICrypto> = [
   {
     symbol: "BTC",
     name: "Bitcoin",
@@ -11,32 +30,9 @@ const mockData: object[] = [
   }
 ];
 
-// Teach Autosuggest how to calculate suggestions for any given input value.
-const getSuggestions = (value: string): string[] => { // might need to be changed to "void" in case an empty array doesn't count as string[]
-  const inputValue: string = value.trim().toLowerCase();
-  const inputLength: number = inputValue.length;
-
-  ////////////////////////////////////// fix ts after this point & convert class to hooks
-  return inputLength === 0 ? [] : mockData.filter(coin =>
-    coin.name.toLowerCase().slice(0, inputLength) === inputValue
-  );
-};
-
-// When suggestion is clicked, Autosuggest needs to populate the input
-// based on the clicked suggestion. Teach Autosuggest how to calculate the
-// input value for every given suggestion.
-const getSuggestionValue = suggestion => suggestion.name;
-
-// Use your imagination to render suggestions.
-const renderSuggestion = suggestion => (
-  <div>
-    {suggestion.name}
-  </div>
-);
-
-class Example extends React.Component {
-  constructor() {
-    super();
+class Example extends React.Component<IProps, IState> {
+  constructor(props: IProps) {
+    super(props);
 
     // Autosuggest is a controlled component.
     // This means that you need to provide an input value
@@ -49,7 +45,30 @@ class Example extends React.Component {
     };
   }
 
-  onChange = (event, { newValue }) => {
+  // Teach Autosuggest how to calculate suggestions for any given input value.
+  getSuggestions = (value: string): Array<ICrypto> => { // might need to be changed to "void" in case an empty array doesn't count as string[]
+    const inputValue: string = value.trim().toLowerCase();
+    const inputLength: number = inputValue.length;
+
+    ////////////////////////////////////// fix ts after this point & convert class to hooks
+    return inputLength === 0 ? [] : mockData.filter(coin =>
+      coin.name.toLowerCase().slice(0, inputLength) === inputValue
+    );
+  };
+
+  // When suggestion is clicked, Autosuggest needs to populate the input
+  // based on the clicked suggestion. Teach Autosuggest how to calculate the
+  // input value for every given suggestion.
+  getSuggestionValue = (suggestion: ICrypto): string => suggestion.name;
+
+  // Use your imagination to render suggestions.
+  renderSuggestion = (suggestion: ICrypto): JSX.Element => (
+    <div>
+      {suggestion.name}
+    </div>
+  );
+
+  onChange = (event: React.SyntheticEvent<HTMLInputElement>, { newValue }: { newValue: string }): void => {
     this.setState({
       value: newValue
     });
@@ -57,14 +76,14 @@ class Example extends React.Component {
 
   // Autosuggest will call this function every time you need to update suggestions.
   // You already implemented this logic above, so just use it.
-  onSuggestionsFetchRequested = ({ value }) => {
+  onSuggestionsFetchRequested = ({ value }: { value: string }): void => {
     this.setState({
-      suggestions: getSuggestions(value)
+      suggestions: this.getSuggestions(value)
     });
   };
 
   // Autosuggest will call this function every time you need to clear suggestions.
-  onSuggestionsClearRequested = () => {
+  onSuggestionsClearRequested = (): void => {
     this.setState({
       suggestions: []
     });
@@ -80,16 +99,17 @@ class Example extends React.Component {
       onChange: this.onChange
     };
 
-    // Finally, render it!
     return (
       <Autosuggest
         suggestions={suggestions}
         onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
         onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-        getSuggestionValue={getSuggestionValue}
-        renderSuggestion={renderSuggestion}
+        getSuggestionValue={this.getSuggestionValue}
+        renderSuggestion={this.renderSuggestion}
         inputProps={inputProps}
       />
     );
   }
-}
+};
+
+export default Example
