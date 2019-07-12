@@ -22,7 +22,7 @@ interface IInputProps {
 const mockData: Array<ICrypto> = [
   {
     symbol: "BTC",
-    name: "Bitcoin",
+    name: "Bitcoin"
   },
   {
     symbol: "ETH",
@@ -45,30 +45,44 @@ class Example extends React.Component<IProps, IState> {
     };
   }
 
+  escapeRegexCharacters = (str: string): string => {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
   // Teach Autosuggest how to calculate suggestions for any given input value.
   getSuggestions = (value: string): Array<ICrypto> => { // might need to be changed to "void" in case an empty array doesn't count as string[]
-    const inputValue: string = value.trim().toLowerCase();
-    const inputLength: number = inputValue.length;
+    const escapedValue: string = this.escapeRegexCharacters(value.trim());
+    if (escapedValue === '') return [];
+    const regex = new RegExp('\\b' + escapedValue, 'i');
 
-    ////////////////////////////////////// fix ts after this point & convert class to hooks
-    return inputLength === 0 ? [] : mockData.filter(coin =>
-      coin.name.toLowerCase().slice(0, inputLength) === inputValue
-    );
+    return mockData.filter(coin => regex.test(this.getSuggestionValue(coin)));
+
+    // const inputValue: string = value.trim().toLowerCase();
+    // const inputLength: number = inputValue.length;
+    // return inputLength === 0 ? [] : mockData.filter(coin =>
+    //   coin.name.toLowerCase().slice(0, inputLength) === inputValue
+    // );
   };
 
   // When suggestion is clicked, Autosuggest needs to populate the input
   // based on the clicked suggestion. Teach Autosuggest how to calculate the
   // input value for every given suggestion.
-  getSuggestionValue = (suggestion: ICrypto): string => suggestion.name;
+  getSuggestionValue = (suggestion: ICrypto): string => `${suggestion.symbol}: ${suggestion.name}`;
 
   // Use your imagination to render suggestions.
-  renderSuggestion = (suggestion: ICrypto): JSX.Element => (
-    <div>
-      {suggestion.name}
-    </div>
-  );
+  renderSuggestion = (
+    suggestion: ICrypto,
+    { query, isHighlighted }: { query: string, isHighlighted: boolean }
+  ): JSX.Element => (
+      <div>
+        {suggestion.name}
+      </div>
+    );
 
-  onChange = (event: React.SyntheticEvent<HTMLInputElement>, { newValue }: { newValue: string }): void => {
+  onChange = (
+    event: React.SyntheticEvent<HTMLInputElement>,
+    { newValue }: { newValue: string }
+  ): void => {
     this.setState({
       value: newValue
     });
@@ -93,7 +107,7 @@ class Example extends React.Component<IProps, IState> {
     const { value, suggestions } = this.state;
 
     // Autosuggest will pass through all these props to the input.
-    const inputProps = {
+    const inputProps: Autosuggest.InputProps<ICrypto> = {
       placeholder: 'Type a programming language',
       value,
       onChange: this.onChange
